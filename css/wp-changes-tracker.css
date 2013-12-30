@@ -1,0 +1,43 @@
+#wp_changes_tracker_table{
+	table-layout: fixed;
+	
+}
+
+#wp_changes_tracker_table span.show-details{
+	text-decoration:underline;
+	cursor: pointer;
+	color: #2887b3;
+}
+
+#wp_changes_tracker_table tr.odd.core td {
+	background-color: #c4ffc4;
+}
+
+#wp_changes_tracker_table tr.even.core td {
+	background-color: #d5ffd5;
+}
+
+#wp_changes_tracker_table tr.odd.multisite td {
+	background-color: #c4c4ff;
+}
+
+#wp_changes_tracker_table tr.even.multisite td {
+	background-color: #d5d5ff;
+}
+
+
+#wp_changes_tracker_table tr.odd.plugin td {
+	background-color: #ffc4c4;
+}
+#wp_changes_tracker_table tr.even.plugin td {
+	background-color: #ffd5d5;
+}
+
+
+#wp_changes_tracker_table tr.odd.option td {
+	background-color: #eef;
+}
+
+#wp_changes_tracker_table tr.even.option td {
+	background-color: #ddf;
+}

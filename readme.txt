@@ -1,5 +1,5 @@
 === WP Changes Tracker ===
-Contributors: pixeline 
+Contributors: pixeline, jacobwarduk 
 Donate link: http://goo.gl/7L2ua
 Tags: changelog,history,track,changes,revisions,log
 Requires at least: 2.9.2
@@ -44,6 +44,9 @@ Thanks also to:
 Long live open source, Heil to the helpful souls!
 
 == Changelog ==
+
+= 2.0.4 =
+- added optional functionality to email logs to blog administrator.
 
 = 2.0.3 =
 - fixed a typo provoquing a js error.

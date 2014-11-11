@@ -4,7 +4,7 @@ Plugin Name: WP Changes Tracker
 Plugin URI: http://pixeline.be
 Description: Maintain a log of all themes, plugins and wordpress changes.
 
-Version: 2.0.3
+Version: 2.0.4
 Author: pixeline
 Author URI: http://pixeline.be
 */
@@ -13,7 +13,7 @@ if (!class_exists('wp_changes_tracker')) {
 	class wp_changes_tracker {
 
 		private $pluginName = 'WP Changes Tracker';
-		private $pluginVersion = '2.0.0';
+		private $pluginVersion = '2.0.4';
 		private $dbVersion= '1.1';
 		private $dbNameRoot=  'changes_tracker';
 		const pluginId = 'wp_changes_tracker';
@@ -28,6 +28,7 @@ if (!class_exists('wp_changes_tracker')) {
 		private $settings_link='';
 		private $default_type = 'undefined';
 		private $types = array();
+		
 
 
 		function wp_changes_tracker(){$this->__construct();}
@@ -51,7 +52,9 @@ if (!class_exists('wp_changes_tracker')) {
 
 			global $wpdb;
 			$this->dbName = $wpdb->prefix . $this->dbNameRoot;
-
+            
+            // Email address setup
+            $this->email_address = get_option( 'admin_email' );
 
 
 			//register an activation hook for the plugin
@@ -228,6 +231,10 @@ if (!class_exists('wp_changes_tracker')) {
 
 			require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 			$rows_affected = $wpdb->insert( $this->dbName, array( 'when' => current_time('mysql'),'who'=>$user, 'description' => $mess, 'type' => $type ) );
+			
+			if ( 1 == $this->options['email_log'] ) {
+    			wp_mail( $this->email_address, 'WP Changes Tracker Log: ' . date( 'Y-m-d H:i:s' ), ' (' . date( 'Y-m-d H:i:s' ) . ') ' . $user . ': ' . $mess );
+			}
 
 		}
 
@@ -264,7 +271,13 @@ if (!class_exists('wp_changes_tracker')) {
 		 */
 		function getOptions() {
 			if (!$theOptions = get_option($this->optionsName)) {
-				$theOptions = array('db_version'=> $this->dbVersion, 'use_datatables_script'=>1, 'max_log_entries_to_display'=>20, 'full_option_update_logging'=>0);
+				$theOptions = array( 
+				    'db_version'                    => $this->dbVersion, 
+				    'use_datatables_script'         => 1, 
+				    'max_log_entries_to_display'    => 20, 
+				    'full_option_update_logging'    => 0, 
+				    'email_log'                     => 1, 
+				);
 				update_option($this->optionsName, $theOptions);
 			}
 			$this->options = $theOptions;
@@ -289,7 +302,13 @@ if (!class_exists('wp_changes_tracker')) {
 
 			$this->log($this->pluginName . ': log database table successfully installed!', 'plugin');
 
-			$theOptions = array('db_version'=> $this->dbVersion, 'use_datatables_script'=>1, 'max_log_entries_to_display'=>20, 'full_option_update_logging'=>0);
+			$theOptions = array( 
+                'db_version'                    => $this->dbVersion, 
+                'use_datatables_script'         => 1, 
+                'max_log_entries_to_display'    => 20, 
+                'full_option_update_logging'    => 0, 
+                'email_log'                     => 1, 
+            );
 
 			update_option($this->optionsName, $theOptions);
 
@@ -471,6 +490,7 @@ if (!class_exists('wp_changes_tracker')) {
 				$this->options['use_datatables_script'] = $_POST['use_datatables_script'];
 				$this->options['max_log_entries_to_display'] = $_POST['max_log_entries_to_display'];
 				$this->options['full_option_update_logging'] = $_POST['full_option_update_logging'];
+				$this->options['email_log'] = $_POST['email_log'];
 
 				$this->saveAdminOptions();
 				echo '<div class="updated"><p>Success! Your changes were sucessfully saved!</p></div>';
@@ -478,7 +498,11 @@ if (!class_exists('wp_changes_tracker')) {
 ?>
 			<div class="wrap">
 			<h1>WP Changes Tracker</h1>
-			<p><?php _e('by <a href="http://www.pixeline.be" target="_blank" class="external">pixeline</a>', $this->localizationDomain); ?></p>
+			
+			<p>
+			    <?php _e('by <a href="http://www.pixeline.be" target="_blank" class="external">pixeline</a>', $this->localizationDomain); ?>
+                <?php _e(' (contributors: <a href="http://www.jacobward.co.uk" target="_blank" class="external">jacobwarduk</a>, ...)', $this->localizationDomain); ?>
+			</p>
 
 			<p style="font-weight:bold;"><?php _e('If you like this plugin, please <a href="http://wordpress.org/extend/plugins/wp-changes-tracker/" target="_blank">give it a good rating</a> on the Wordpress Plugins repository, and if you make any money out of it, <a title="Paypal donation page" target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=J9X5B6JUVPBHN&lc=US&item_name=pixeline%20%2d%20Wordpress%20plugin&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHostedGuest">send a few coins over to me</a>!', $this->localizationDomain); ?></p>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_donations" />
@@ -504,6 +528,20 @@ if (!class_exists('wp_changes_tracker')) {
 
 							<label><input name="use_datatables_script" type="radio" id="use_datatables_script_no" <?php echo ('0'===$this->options['use_datatables_script']) ? 'checked': '' ;?> value="0"/> <?php _e('No', $this->localizationDomain); ?></label>
 
+						</td>
+					</tr>
+					
+					<tr valign="top">
+						<th width="50%" scope="row">
+						<label for="email_log"><?php _e('Email logs?', $this->localizationDomain); ?></label>
+						</th>
+						<td>
+						    <label><input name="email_log" type="radio" id="email_log_yes" <?php echo ('1'===$this->options['email_log']) ? 'checked': '' ;?> value="1"/> <?php _e('Yes', $this->localizationDomain); ?></label>
+
+							<label><input name="email_log" type="radio" id="email_log_no" <?php echo ('0'===$this->options['email_log']) ? 'checked': '' ;?> value="0"/> <?php _e('No', $this->localizationDomain); ?></label>
+							
+							<small>If chosen, the administrator will receive an emails as changes are logged.</small>
+							
 						</td>
 					</tr>
 
@@ -565,10 +603,8 @@ if (!class_exists('wp_changes_tracker')) {
 		}
 
 
-
-
-
 	} //End Class
+	
 } //End if class exists statement
 if (class_exists('wp_changes_tracker')) {
 	$wp_changes_tracker_var = new wp_changes_tracker();
